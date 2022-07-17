@@ -3,9 +3,9 @@ package server
 import (
 	"context"
 	"fmt"
-	"github.com/EdmundMartin/discrete/bencode"
 	"github.com/EdmundMartin/discrete/config"
 	"github.com/EdmundMartin/discrete/protocol"
+	"github.com/EdmundMartin/discrete/simple_bencode"
 	"github.com/EdmundMartin/discrete/storage"
 	"github.com/EdmundMartin/discrete/torrent_errors"
 	"net/http"
@@ -58,7 +58,7 @@ func (t *TorrentServer) Announce(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	peer, err := protocol.NewPeerFromRequest(r)
 	if err != nil {
-		ErrorResponse(w, torrent_errors.InvalidRequestType)
+		errorResponse(w, torrent_errors.InvalidRequestType)
 		return
 	}
 
@@ -66,27 +66,26 @@ func (t *TorrentServer) Announce(w http.ResponseWriter, r *http.Request) {
 	if t.Config.AutoRegister() {
 		err = t.handleAutoRegister(ctx, peer)
 		if err != nil {
-			ErrorResponse(w, err)
+			errorResponse(w, err)
 			return
 		}
 	} else {
 		err = t.handleRequiredRegister(ctx, peer)
 		if err != nil {
-			ErrorResponse(w, err)
+			errorResponse(w, err)
 			return
 		}
 	}
 
 	peers, err := t.PeerDB.LoadPeers(ctx, peer.InfoHash)
 	if err != nil {
-		ErrorResponse(w, err)
+		errorResponse(w, err)
 		return
 	}
-	activePeers := protocol.ActivePeers(peers)
+	activePeers := protocol.FilterPeers(peers, peer.ClientID)
 
-	contents := bencode.EncodePeerResponse(activePeers)
+	contents := simple_bencode.EncodePeerResponse(activePeers)
 	fmt.Println(contents)
 
-	w.Header().Set("Content-Type", "text/plain")
-	w.Write([]byte(contents))
+	announceResponse(w, contents)
 }

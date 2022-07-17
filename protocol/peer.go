@@ -90,7 +90,12 @@ func extractRequiredFields(peer *Peer, values map[string][]string) error {
 	if !ok {
 		return torrent_errors.MissingPeerID
 	}
-	peer.ClientID = val[0]
+	peerID := val[0]
+	if len(peerID) != 20 {
+		return torrent_errors.InvalidPeerID
+	}
+
+	peer.ClientID = peerID
 
 	return nil
 }

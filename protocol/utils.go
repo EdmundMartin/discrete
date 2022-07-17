@@ -6,6 +6,11 @@ var activeEvents = map[string]interface{}{
 	"":          nil, // Represents a new announce
 }
 
+var inactiveEvents = map[string]interface{}{
+	"paused":  nil,
+	"stopped": nil,
+}
+
 func remove(p []*Peer, idx int) []*Peer {
 	p[idx] = p[len(p)-1]
 	return p[:len(p)-1]
@@ -34,4 +39,14 @@ func FilterPeers(peers []*Peer, clientID string) []*Peer {
 		remove(peers, idx)
 	}
 	return peers
+}
+
+func IsInactive(event string) bool {
+	_, ok := inactiveEvents[event]
+	return ok
+}
+
+func IsActive(event string) bool {
+	_, ok := activeEvents[event]
+	return ok
 }

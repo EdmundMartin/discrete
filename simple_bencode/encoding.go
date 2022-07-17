@@ -1,4 +1,4 @@
-package bencode
+package simple_bencode
 
 import (
 	"bytes"

@@ -14,4 +14,5 @@ type PeerStore interface {
 type TorrentStore interface {
 	LoadTorrentInfo(ctx context.Context, infoHash string) (*torrents.TorrentInfo, error)
 	UpdateTorrentStatus(ctx context.Context, infoHash string) error
+	ListInfo(ctx context.Context, infoHashes []string) ([]*torrents.TorrentInfo, error)
 }
