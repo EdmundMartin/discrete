@@ -23,13 +23,13 @@ func UpdateFromPeer(torrentInfo *TorrentInfo, peer *protocol.Peer) {
 		torrentInfo.CreatedOn = now
 	}
 
-	if peer.Event == "" {
+	if peer.Event == protocol.ANNOUNCE {
 		// Does announce count as active in the swarm?
 		torrentInfo.Announces += 1
 		return
 	}
 
-	if peer.Event == "completed" {
+	if peer.Event == protocol.COMPLETE {
 		torrentInfo.Downloaded += 1
 	}
 	if protocol.IsInactive(peer.Event) && peer.Seed {

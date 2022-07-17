@@ -39,7 +39,7 @@ func Int(x int) string {
 func CompactIP(buf *bytes.Buffer, ip string, port int) error {
 	cmpIP := net.ParseIP(ip).To4()
 	if cmpIP == nil {
-		fmt.Errorf("unable to coerce to IP, %s", ip)
+		fmt.Errorf("unable to coerce to Ip, %s", ip)
 	}
 	buf.Write(cmpIP)
 	portCmp := []byte{byte(port >> 8), byte(port)}
@@ -50,9 +50,9 @@ func CompactIP(buf *bytes.Buffer, ip string, port int) error {
 func CompactPeers(peers []*protocol.Peer) []byte {
 	var buf bytes.Buffer
 	for _, p := range peers {
-		err := CompactIP(&buf, p.IP, p.Port)
+		err := CompactIP(&buf, string(p.Ip), p.Port)
 		if err != nil {
-			log.Printf("failed to compact IP/Port %s:%d", p.IP, p.Port)
+			log.Printf("failed to compact Ip/Port %s:%d", p.Ip, p.Port)
 		}
 	}
 	return buf.Bytes()

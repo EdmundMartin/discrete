@@ -3,6 +3,7 @@ package protocol
 import (
 	"fmt"
 	"github.com/EdmundMartin/discrete/torrent_errors"
+	"net"
 	"net/http"
 	"strconv"
 	"strings"
@@ -29,9 +30,10 @@ var optionalInfo = []string{
 type Peer struct {
 	InfoHash   string
 	ClientID   string
-	IP         string
+	Ip         net.IP
+	IpV6       bool
 	Port       int
-	Event      string
+	Event      Event
 	Seen       time.Time
 	Uploaded   int
 	Downloaded int
@@ -117,7 +119,7 @@ func extractOptionalFields(peer *Peer, values map[string][]string) {
 	}
 	peer.Uploaded = forceToInt(optionalFields[uploadedField])
 	peer.Downloaded = forceToInt(optionalFields[downloadedField])
-	peer.Event = optionalFields[event]
+	peer.Event = EventFromString(optionalFields[event])
 	peer.Seed = isSeed(optionalFields[leftField])
 }
 
@@ -125,7 +127,11 @@ func NewPeerFromRequest(r *http.Request) (*Peer, error) {
 
 	peer := &Peer{}
 	query := r.URL.Query()
-	peer.IP = parseRemoteAddr(r)
+
+	clientIP := GetIP(r)
+	peer.Ip = clientIP.IP
+	peer.IpV6 = clientIP.IpV6
+
 	err := extractRequiredFields(peer, query)
 	if err != nil {
 		return nil, err

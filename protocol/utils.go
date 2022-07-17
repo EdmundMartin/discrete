@@ -1,14 +1,14 @@
 package protocol
 
-var activeEvents = map[string]interface{}{
-	"completed": nil,
-	"started":   nil,
-	"":          nil, // Represents a new announce
+var activeEvents = map[Event]interface{}{
+	COMPLETE: nil,
+	STARTED:  nil,
+	ANNOUNCE: nil, // Represents a new announce
 }
 
-var inactiveEvents = map[string]interface{}{
-	"paused":  nil,
-	"stopped": nil,
+var inactiveEvents = map[Event]interface{}{
+	PAUSED:  nil,
+	STOPPED: nil,
 }
 
 func remove(p []*Peer, idx int) []*Peer {
@@ -41,12 +41,12 @@ func FilterPeers(peers []*Peer, clientID string) []*Peer {
 	return peers
 }
 
-func IsInactive(event string) bool {
+func IsInactive(event Event) bool {
 	_, ok := inactiveEvents[event]
 	return ok
 }
 
-func IsActive(event string) bool {
+func IsActive(event Event) bool {
 	_, ok := activeEvents[event]
 	return ok
 }

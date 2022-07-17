@@ -3,7 +3,6 @@ package memory
 import (
 	"context"
 	"github.com/EdmundMartin/discrete/torrents"
-	"time"
 )
 
 type TorrentInfoMemoryStore struct {
@@ -29,18 +28,8 @@ func (t TorrentInfoMemoryStore) LoadTorrentInfo(ctx context.Context, infoHash st
 	return val, nil
 }
 
-func (t TorrentInfoMemoryStore) UpdateTorrentStatus(ctx context.Context, infoHash string) error {
-	val, ok := t.internalStorage[infoHash]
-	if !ok {
-		now := time.Now()
-		t.internalStorage[infoHash] = &torrents.TorrentInfo{
-			InfoHash:  infoHash,
-			CreatedOn: now,
-			UpdatedOn: now,
-		}
-		return nil
-	}
-	val.UpdatedOn = time.Now()
+func (t TorrentInfoMemoryStore) UpdateTorrentStatus(ctx context.Context, info *torrents.TorrentInfo) error {
+	t.internalStorage[info.InfoHash] = info
 	return nil
 }
 

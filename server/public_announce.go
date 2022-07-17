@@ -2,16 +2,19 @@ package server
 
 import (
 	"context"
-	"fmt"
+	"github.com/EdmundMartin/discrete/bencoding"
 	"github.com/EdmundMartin/discrete/config"
 	"github.com/EdmundMartin/discrete/protocol"
-	"github.com/EdmundMartin/discrete/simple_bencode"
 	"github.com/EdmundMartin/discrete/storage"
 	"github.com/EdmundMartin/discrete/torrent_errors"
+	"github.com/EdmundMartin/discrete/torrents"
+	"log"
 	"net/http"
+	"time"
 )
 
 type TorrentServer struct {
+	Logger    *log.Logger // TODO - Replace with interface
 	PeerDB    storage.PeerStore
 	TorrentDB storage.TorrentStore
 	Config    config.ConfigStore
@@ -23,7 +26,26 @@ func (t *TorrentServer) handleAutoRegister(ctx context.Context, peer *protocol.P
 		return torrent_errors.GenericError
 	}
 
-	if err := t.TorrentDB.UpdateTorrentStatus(ctx, peer.InfoHash); err != nil {
+	tor, err := t.TorrentDB.LoadTorrentInfo(ctx, peer.InfoHash)
+	if err != nil {
+		return torrent_errors.GenericError
+	}
+
+	if tor == nil {
+		tor = &torrents.TorrentInfo{
+			InfoHash:   peer.InfoHash,
+			Seeders:    0,
+			Downloaded: 0,
+			Leechers:   0,
+			Announces:  0,
+			CreatedOn:  time.Now(),
+			UpdatedOn:  time.Now(),
+		}
+	}
+
+	torrents.UpdateFromPeer(tor, peer)
+
+	if err := t.TorrentDB.UpdateTorrentStatus(ctx, tor); err != nil {
 		return torrent_errors.GenericError
 	}
 
@@ -45,7 +67,8 @@ func (t *TorrentServer) handleRequiredRegister(ctx context.Context, peer *protoc
 		return torrent_errors.GenericError
 	}
 
-	err = t.TorrentDB.UpdateTorrentStatus(ctx, peer.InfoHash)
+	torrents.UpdateFromPeer(info, peer)
+	err = t.TorrentDB.UpdateTorrentStatus(ctx, info)
 	if err != nil {
 		return torrent_errors.GenericError
 	}
@@ -53,7 +76,7 @@ func (t *TorrentServer) handleRequiredRegister(ctx context.Context, peer *protoc
 	return nil
 }
 
-func (t *TorrentServer) Announce(w http.ResponseWriter, r *http.Request) {
+func (t *TorrentServer) PublicAnnounce(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 	peer, err := protocol.NewPeerFromRequest(r)
@@ -61,6 +84,7 @@ func (t *TorrentServer) Announce(w http.ResponseWriter, r *http.Request) {
 		errorResponse(w, torrent_errors.InvalidRequestType)
 		return
 	}
+	t.Logger.Printf("got event: %s, from clientID: %s", peer.Event, peer.ClientID)
 
 	// When auto register is allowed we blindly store the peer information
 	if t.Config.AutoRegister() {
@@ -83,9 +107,14 @@ func (t *TorrentServer) Announce(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	activePeers := protocol.FilterPeers(peers, peer.ClientID)
+	contents, err := bencoding.AnnounceResponse(activePeers, protocol.TrackerInterval{
+		MinIntervalSeconds:     180,
+		DefaultIntervalSeconds: 180,
+	}, peer.IpV6)
 
-	contents := simple_bencode.EncodePeerResponse(activePeers)
-	fmt.Println(contents)
-
-	announceResponse(w, contents)
+	if err != nil {
+		errorResponse(w, err)
+		return
+	}
+	scrapeResponse(w, contents)
 }
