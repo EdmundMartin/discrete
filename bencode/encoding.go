@@ -24,9 +24,6 @@ func ByteString(key string) string {
 
 func KeyValue(key string, value string) string {
 	key = ByteString(key)
-	if len(value) == 0 {
-		return writeStringData(key, "")
-	}
 	if value[0] == 'i' || value[0] == 'l' || value[0] == 'd' {
 		value = value
 	} else {
@@ -80,8 +77,10 @@ func EncodePeerResponse(peers []*protocol.Peer) string {
 	incomplete := countStatus(peers, false)
 	result += KeyValue("incomplete", Int(incomplete))
 
-	ipPorts := string(CompactPeers(peers))
-	result += KeyValue("peers", ipPorts)
+	if len(peers) > 0 {
+		ipPorts := string(CompactPeers(peers))
+		result += KeyValue("peers", ipPorts)
+	}
 
 	resp := fmt.Sprintf("d%se", result)
 	return resp

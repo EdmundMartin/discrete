@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/EdmundMartin/discrete/config/defaultconfig"
 	"github.com/EdmundMartin/discrete/server"
 	"github.com/EdmundMartin/discrete/storage/memory"
 	"github.com/gorilla/mux"
@@ -10,7 +11,9 @@ import (
 func main() {
 
 	t := server.TorrentServer{
-		PeerDB: memory.NewMemoryStore(),
+		TorrentDB: memory.NewTorrentInfoMemoryStore(),
+		PeerDB:    memory.NewMemoryStore(),
+		Config:    defaultconfig.NewDefaultConfig(),
 	}
 
 	r := mux.NewRouter()

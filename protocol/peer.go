@@ -103,7 +103,12 @@ func extractOptionalFields(peer *Peer, values map[string][]string) {
 		if !ok {
 			optionalFields[opt] = ""
 		}
-		optionalFields[opt] = val[0]
+		if len(val) > 0 {
+			// Event can be an empty array within request header - identifying announce
+			optionalFields[opt] = val[0]
+		} else {
+			optionalFields[opt] = ""
+		}
 	}
 	peer.Uploaded = forceToInt(optionalFields[uploadedField])
 	peer.Downloaded = forceToInt(optionalFields[downloadedField])

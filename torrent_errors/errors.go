@@ -46,7 +46,7 @@ var (
 		Code:    153,
 		Message: "Client not whitelisted",
 	}
-	InofHashNotFound = TrackerError{
+	InfoHashNotFound = TrackerError{
 		Code:    480,
 		Message: "Unknown infohash",
 	}

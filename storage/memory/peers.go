@@ -5,11 +5,11 @@ import (
 	"github.com/EdmundMartin/discrete/protocol"
 )
 
-type MemoryStore struct {
+type PeerMemoryStore struct {
 	peersByInfoHash map[string][]*protocol.Peer
 }
 
-func (m MemoryStore) StorePeer(ctx context.Context, peer *protocol.Peer) error {
+func (m PeerMemoryStore) StorePeer(ctx context.Context, peer *protocol.Peer) error {
 	peers, ok := m.peersByInfoHash[peer.InfoHash]
 	if !ok {
 		m.peersByInfoHash[peer.InfoHash] = []*protocol.Peer{peer}
@@ -25,7 +25,7 @@ func (m MemoryStore) StorePeer(ctx context.Context, peer *protocol.Peer) error {
 	return nil
 }
 
-func (m MemoryStore) LoadPeers(ctx context.Context, infoHash string) ([]*protocol.Peer, error) {
+func (m PeerMemoryStore) LoadPeers(ctx context.Context, infoHash string) ([]*protocol.Peer, error) {
 	peers, ok := m.peersByInfoHash[infoHash]
 	if !ok {
 		return []*protocol.Peer{}, nil
@@ -33,6 +33,6 @@ func (m MemoryStore) LoadPeers(ctx context.Context, infoHash string) ([]*protoco
 	return peers, nil
 }
 
-func NewMemoryStore() *MemoryStore {
-	return &MemoryStore{map[string][]*protocol.Peer{}}
+func NewMemoryStore() *PeerMemoryStore {
+	return &PeerMemoryStore{map[string][]*protocol.Peer{}}
 }
