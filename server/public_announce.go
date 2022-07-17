@@ -78,6 +78,11 @@ func (t *TorrentServer) handleRequiredRegister(ctx context.Context, peer *protoc
 
 func (t *TorrentServer) PublicAnnounce(w http.ResponseWriter, r *http.Request) {
 
+	if t.Config.IsPrivateOnly() {
+		// If we don't support public announcements simple respond with Invalid request
+		errorResponse(w, torrent_errors.InvalidRequestType)
+	}
+
 	ctx := r.Context()
 	peer, err := protocol.NewPeerFromRequest(r)
 	if err != nil {
@@ -107,10 +112,7 @@ func (t *TorrentServer) PublicAnnounce(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	activePeers := protocol.FilterPeers(peers, peer.ClientID)
-	contents, err := bencoding.AnnounceResponse(activePeers, protocol.TrackerInterval{
-		MinIntervalSeconds:     180,
-		DefaultIntervalSeconds: 180,
-	}, peer.IpV6)
+	contents, err := bencoding.AnnounceResponse(activePeers, t.Config.TrackerInterval(), peer.IpV6)
 
 	if err != nil {
 		errorResponse(w, err)
