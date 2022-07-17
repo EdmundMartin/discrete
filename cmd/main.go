@@ -25,6 +25,7 @@ func main() {
 
 	r := mux.NewRouter()
 	r.HandleFunc("/announce", t.PublicAnnounce)
+	r.HandleFunc("/scrape", t.Scrape)
 
 	srv := &http.Server{
 		Addr:    "0.0.0.0:8080",
